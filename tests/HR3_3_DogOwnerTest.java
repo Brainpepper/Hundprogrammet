@@ -1,3 +1,4 @@
+package tests;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.*;
@@ -5,18 +6,21 @@ import java.util.*;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
 
+import Dog;
+import DogCollection;
+import Owner;
+import OwnerCollection;
+
 /**
- * Testfall för att lägga till och ta bort till en hund från en ägare i uppgift
- * HR3.3. Dessa testfall förutsätter att <code>setOwner</code> i hundklassen
- * fungerar korrekt, och täcker bara de varianter där <code>addDog</code> eller
- * <code>removeDog</code> i ägarklassen anropas direkt för att ändra
- * ägarförhållandet. De täcker alltså de delar av den första fungerande
- * alternativet som presenteras i uppgiften som inte täcktes av testfallen i
- * <code>{@link HR3_3_DogOwnerTest}</code>.
+ * Testfall för att sätta/ta bort ägaren för en hund i uppgift HR3.3. Testfallen
+ * i denna klass förutsätter alla att det är hunden som kan initiera en
+ * ägarförändring, dvs att <code>setOwner</code> alltid är den första metoden
+ * som anropas.
  * <p>
- * Dessa testfall ska <em>bara</em> användas om du implementerar denna variant
- * av uppgiften, inte om du implementerar det andra. De körs därför
- * <em>inte</em> på testservern i ilearn.
+ * Om du vill implementera det bättre alternativet där även ägaren, via
+ * <code>setOwner</code> och <code>removeOwner</code>, kan initiera en
+ * ägarförändring så finns det ytterligare tester för detta i
+ * <code>{@link HR3_3_ExtraTest}</code>.
  * <p>
  * Beskrivningen av testfallens uppgift, styrka och svagheter från
  * <code>{@link HR1_1_OwnerTest}</code> gäller (naturligvis) också för
@@ -26,11 +30,11 @@ import org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
  * @author Henrik Bergström
  * @version 2023-12-27 10:47
  * @see HR1_1_OwnerTest
- * @see HR3_3_DogOwnerTest
+ * @see HR3_3_ExtraTest
  */
 @TestMethodOrder(OrderAnnotation.class)
-@DisplayName("HR3.3: Testfall för de extra fall som finns när även ägaren kan initiera en förändring")
-public class HR3_3_ExtraTest {
+@DisplayName("HR3.3: Testfall för att hundens ägare sätts korrekt")
+public class HR3_3_DogOwnerTest {
 
 	public static final String VERSION = "2023-12-27 10:47";
 
@@ -68,11 +72,6 @@ public class HR3_3_ExtraTest {
 	}
 
 	private void assertDogsOwned(Owner owner, Dog... expectedDogs) {
-		assertDogsOwned(false, false, owner, expectedDogs);
-	}
-
-	private void assertDogsOwned(boolean expectedReturnValue, boolean actualReturnValue, Owner owner,
-			Dog... expectedDogs) {
 		var owned = owner.getDogs();
 		var expected = Arrays.asList(expectedDogs);
 
@@ -82,10 +81,14 @@ public class HR3_3_ExtraTest {
 		var extra = new ArrayList<>(owned);
 		extra.removeAll(expected);
 
-		assertAll("Fel resultat vid uppdatering av %s".formatted(owner.getName()),
-				() -> assertEquals(expectedReturnValue, actualReturnValue, "Fel returvärde"),
-				() -> assertTrue(missing.isEmpty(), "Dessa hundar saknas hos ägaren: " + missing),
-				() -> assertTrue(extra.isEmpty(), "Dessa hundar borde inte finnas hos ägaren: " + extra));
+		assertAll("""
+				Fel hundar ägs av %s.
+				Förväntade: %s
+				Ägda: %s
+
+				""".formatted(owner.getName(), expected, owned),
+				() -> assertTrue(missing.isEmpty(), missing + " saknas"),
+				() -> assertTrue(extra.isEmpty(), extra + " borde inte finnas med"));
 	}
 
 	@Test
@@ -102,217 +105,200 @@ public class HR3_3_ExtraTest {
 		new OwnerImplementationValidator().execute();
 	}
 
+	////////////////////////////////////////////
+	//
+	// Tester för att hundens ägare sätts
+	//
+	////////////////////////////////////////////
+
 	@Test
 	@Order(30)
-	@DisplayName("Det går att lägga till en hund till ägaren")
-	public void addingDogWithoutOwner() {
+	@DisplayName("En ny hund har ingen ägare")
+	public void aNewlyCreatedDogHaveNoOwner() {
 		var dog = newDog();
-		var owner = newOwner();
-
-		var rv = owner.addDog(dog);
-
-		assertDogsOwned(true, rv, owner, dog);
+		assertNull(dog.getOwner());
 	}
 
 	@Test
 	@Order(40)
-	@DisplayName("När en hund läggs till sätts också ägaren hos hunden")
-	public void addingDogSetsOwner() {
+	@DisplayName("Ägaren sparas hos hunden")
+	public void settingTheOwnerUpdatesOwnershipOfDog() {
 		var dog = newDog();
 		var owner = newOwner();
 
-		owner.addDog(dog);
+		dog.setOwner(owner);
 
 		assertEquals(owner, dog.getOwner());
 	}
 
 	@Test
 	@Order(50)
-	@DisplayName("Det går att lägga till flera hundar")
-	public void addingMultipleDogs() {
-		var firstDog = newDog();
-		var secondDog = newDog();
-		var owner = newOwner();
-
-		owner.addDog(firstDog);
-		var rv = owner.addDog(secondDog);
-
-		assertDogsOwned(true, rv, owner, firstDog, secondDog);
-	}
-
-	@Test
-	@Order(60)
-	@DisplayName("Det går inte att lägga till en hund som redan ägs av samma ägare igen")
-	public void addingDogAlreadyOwnedBySameOwner() {
+	@DisplayName("Ägaren kan tas bort från hunden")
+	public void settingTheOwnerToNullClearsTheOwner() {
 		var dog = newDog();
 		var owner = newOwner();
 
-		owner.addDog(dog);
-		var rv = owner.addDog(dog);
-
-		assertDogsOwned(false, rv, owner, dog);
-	}
-
-	@Test
-	@Order(70)
-	@DisplayName("Det går inte att lägga till en hund som redan har en annan ägare")
-	public void addingDogAlreadyOwnedByOtherOwner() {
-		var dog = newDog();
-		var owner = newOwner();
-		var otherOwner = newOwner("Otherowner");
-
-		otherOwner.addDog(dog);
-		var rv = owner.addDog(dog);
-
-		assertDogsOwned(false, rv, owner);
-	}
-
-	@Test
-	@Order(80)
-	@DisplayName("Det går att ta bort en hund från ägaren")
-	public void removingDogOwnedBySameOwner() {
-		var dog = newDog();
-		var owner = newOwner();
-
-		owner.addDog(dog);
-		var rv = owner.removeDog(dog);
-
-		assertDogsOwned(true, rv, owner);
-	}
-
-	@Test
-	@Order(90)
-	@DisplayName("När en hund tas bort tas också ägaren bort från hunden")
-	public void removingDogAlsoRemovesOwner() {
-		var dog = newDog();
-		var owner = newOwner();
-
-		owner.addDog(dog);
-		owner.removeDog(dog);
+		dog.setOwner(owner);
+		dog.setOwner(null);
 
 		assertNull(dog.getOwner());
 	}
 
 	@Test
-	@Order(100)
-	@DisplayName("Det går att ta bort flera hundar från ägaren i samma ordning som de sattes in")
-	public void removingMultipleDogsInInsertionOrder() {
-		var firstDog = newDog();
-		var secondDog = newDog();
+	@Order(60)
+	@DisplayName("Att sätta ägaren för en redan ägd hund gör inget")
+	public void settingTheOwnerOfAnAlreadyOwnedDogDoesNothing() {
+		var dog = newDog();
+		var owner = newOwner();
+		var otherOwner = newOwner("Other owner");
+
+		dog.setOwner(owner);
+		dog.setOwner(otherOwner);
+
+		assertEquals(owner, dog.getOwner());
+	}
+
+	@Test
+	@Order(70)
+	@DisplayName("Sätta och ta bort ägaren flera gånger")
+	public void settingAndRemovingOwnerMultipleTimes() {
+		var dog = newDog();
+		var firstOwner = newOwner("First owner");
+		var secondOwner = newOwner("Second owner");
+
+		dog.setOwner(firstOwner);
+		assertEquals(firstOwner, dog.getOwner());
+
+		dog.setOwner(null);
+		assertNull(dog.getOwner());
+
+		dog.setOwner(secondOwner);
+		assertEquals(secondOwner, dog.getOwner());
+
+		dog.setOwner(null);
+		assertNull(dog.getOwner());
+	}
+
+	////////////////////////////////////////////
+	//
+	// Tester för att ägarens samling med hundar
+	// uppdateras
+	//
+	////////////////////////////////////////////
+
+	@Test
+	@Order(80)
+	@DisplayName("En ny ägare äger inga hundar")
+	public void aNewlyCreatedOwnerHaveNoDogs() {
+		var owner = newOwner();
+		assertTrue(owner.getDogs().isEmpty());
+	}
+
+	@Test
+	@Order(90)
+	@DisplayName("Hunden sparas hos ägaren")
+	public void settingTheOwnerAddsTheDogToTheOwner() {
+		var dog = newDog();
 		var owner = newOwner();
 
-		owner.addDog(firstDog);
-		owner.addDog(secondDog);
+		dog.setOwner(owner);
 
-		var rv1 = owner.removeDog(firstDog);
-		assertDogsOwned(true, rv1, owner, secondDog);
+		assertDogsOwned(owner, dog);
+	}
 
-		var rv2 = owner.removeDog(secondDog);
-		assertDogsOwned(true, rv2, owner);
+	@Test
+	@Order(100)
+	@DisplayName("Hundarna sparas hos ägaren")
+	public void settingTheOwnerOfMultipleDogsAddsThemToTheOwner() {
+		var firstDog = newDog("First dog");
+		var secondDog = newDog("Second dog");
+		var owner = newOwner();
+
+		firstDog.setOwner(owner);
+		secondDog.setOwner(owner);
+
+		assertDogsOwned(owner, firstDog, secondDog);
 	}
 
 	@Test
 	@Order(110)
-	@DisplayName("Det går att ta bort flera hundar från ägaren i omvänd ordning mot den de sattes in i")
-	public void removingMultipleDogsInReverseInsertionOrder() {
-		var firstDog = newDog();
-		var secondDog = newDog();
+	@DisplayName("Hunden tas bort från ägaren")
+	public void settingTheOwnerToNullRemovesTheDogFromTheOwner() {
+		var dog = newDog();
 		var owner = newOwner();
 
-		owner.addDog(firstDog);
-		owner.addDog(secondDog);
+		dog.setOwner(owner);
+		dog.setOwner(null);
 
-		var rv1 = owner.removeDog(secondDog);
-		assertDogsOwned(true, rv1, owner, firstDog);
-
-		var rv2 = owner.removeDog(firstDog);
-		assertDogsOwned(true, rv2, owner);
+		assertDogsOwned(owner);
 	}
 
 	@Test
 	@Order(120)
-	@DisplayName("Det går inte att ta bort en hund som inte har en ägare när man själv inte äger några hundar")
-	public void removingDogWithoutOwnerWhenOwningNoDogs() {
-		var dog = newDog();
+	@DisplayName("Hundarna tas bort från ägaren i samma ordning de lades till")
+	public void settingTheOwnerToNullForMultipleDogsInTheSameOrderTheyWereAddedRemovesThemFromTheOwner() {
+		var firstDog = newDog("First dog");
+		var secondDog = newDog("Second dog");
 		var owner = newOwner();
 
-		var rv = owner.removeDog(dog);
+		firstDog.setOwner(owner);
+		secondDog.setOwner(owner);
 
-		assertDogsOwned(false, rv, owner);
+		firstDog.setOwner(null);
+		secondDog.setOwner(null);
+
+		assertDogsOwned(owner);
 	}
 
 	@Test
 	@Order(130)
-	@DisplayName("Det går inte att ta bort en hund som inte har en ägare när man själv äger minst en hund")
-	public void removingDogWithoutOwnerWhenOwningAtLeastOneOtherDog() {
-		var dog = newDog();
-		var otherDog = newDog("Otherdog");
+	@DisplayName("Hundarna tas bort från ägaren i omvänd ordning från den de lades till")
+	public void settingTheOwnerToNullForMultipleDogsInReverseOrderToThatTheyWereAddedRemovesThemFromTheOwner() {
+		var firstDog = newDog("First dog");
+		var secondDog = newDog("Second dog");
 		var owner = newOwner();
 
-		owner.addDog(otherDog);
-		var rv = owner.removeDog(dog);
+		firstDog.setOwner(owner);
+		secondDog.setOwner(owner);
 
-		assertDogsOwned(false, rv, owner, otherDog);
+		secondDog.setOwner(null);
+		firstDog.setOwner(null);
+
+		assertDogsOwned(owner);
 	}
 
 	@Test
 	@Order(140)
-	@DisplayName("Det går inte att ta bort en hund som har en annan ägare när man själv inte äger några hundar")
-	public void removingDogOwnedByOtherOwnerWhenOwningNoDogs() {
+	@DisplayName("Att sätta ägaren för en redan ägd hund påverkar inte den ursprungliga ägaren")
+	public void settingTheOwnerOfAnAlreadyOwnedDogDoesNothingToTheOriginalOwner() {
 		var dog = newDog();
 		var owner = newOwner();
-		var otherOwner = newOwner("Otherowner");
+		var otherOwner = newOwner("Other owner");
 
-		otherOwner.addDog(dog);
-		var rv = owner.addDog(dog);
+		dog.setOwner(owner);
+		dog.setOwner(otherOwner);
 
-		assertDogsOwned(false, rv, owner);
+		assertDogsOwned(owner, dog);
 	}
 
 	@Test
 	@Order(150)
-	@DisplayName("Det går inte att ta bort en hund som har en annan ägare när man själv äger minst en hund")
-	public void removingDogOwnedByOtherOwnerWhenOwningAtLeastOneOtherDog() {
+	@DisplayName("Att sätta ägaren för en redan ägd hund påverkar inte den \"nya\" ägaren")
+	public void settingTheOwnerOfAnAlreadyOwnedDogDoesNothingToTheNewOwner() {
 		var dog = newDog();
-		var otherDog = newDog("Otherdog");
 		var owner = newOwner();
-		var otherOwner = newOwner("Otherowner");
+		var otherOwner = newOwner("Other owner");
 
-		owner.addDog(otherDog);
-		otherOwner.addDog(dog);
-		var rv = owner.addDog(dog);
+		dog.setOwner(owner);
+		dog.setOwner(otherOwner);
 
-		assertDogsOwned(false, rv, owner, otherDog);
+		assertDogsOwned(otherOwner);
 	}
 
 	@Test
 	@Order(160)
-	@DisplayName("Det går inte att lägga till en hund som är null")
-	public void addingNullDog() {
-		var owner = newOwner();
-
-		var rv = owner.addDog(null);
-
-		assertDogsOwned(false, rv, owner);
-	}
-
-	@Test
-	@Order(170)
-	@DisplayName("Det går inte att ta bort en hund som är null")
-	public void removingNullDog() {
-		var dog = newDog();
-		var owner = newOwner();
-
-		owner.addDog(dog);
-		var rv = owner.addDog(null);
-
-		assertDogsOwned(false, rv, owner, dog);
-	}
-
-	@Test
-	@Order(180)
-	@DisplayName("Flera hundar kan läggas till och tas bort på olika sätt")
-	public void multipleDogsAddedAndRemovedFromDifferentOwners() {
+	@DisplayName("Sätta och ta bort ägaren flera gånger")
+	public void settingAndRemovingOwnerMultipleTimesUpdatesTheOwners() {
 		// De "vanliga" namnen på hundarna och ägarna gjorde testet mer lättläst
 		var fido = newDog("Fido");
 		var karo = newDog("Karo");
@@ -322,7 +308,7 @@ public class HR3_3_ExtraTest {
 		assertDogsOwned(henrik);
 		assertDogsOwned(olle);
 
-		henrik.addDog(fido);
+		fido.setOwner(henrik);
 		assertDogsOwned(henrik, fido);
 		assertDogsOwned(olle);
 
@@ -334,19 +320,56 @@ public class HR3_3_ExtraTest {
 		assertDogsOwned(henrik);
 		assertDogsOwned(olle, karo);
 
-		olle.addDog(fido);
+		fido.setOwner(olle);
 		assertDogsOwned(henrik);
 		assertDogsOwned(olle, karo, fido);
 
-		olle.removeDog(fido);
+		fido.setOwner(null);
 		karo.setOwner(null);
 		assertDogsOwned(henrik);
 		assertDogsOwned(olle);
 
 		fido.setOwner(henrik);
-		henrik.addDog(karo);
+		karo.setOwner(henrik);
 		assertDogsOwned(henrik, fido, karo);
 		assertDogsOwned(olle);
+	}
+
+	////////////////////////////////////////
+	//
+	// Övriga test för hundar och ägare
+	//
+	////////////////////////////////////////
+
+	@Test
+	@Order(170)
+	@DisplayName("Ägaren finns med i strängrepresentationen för hunden")
+	public void ownerInStringRepresentation() {
+		var dog = newDog();
+		var owner = newOwner("Olle");
+
+		dog.setOwner(owner);
+
+		String str = dog.toString();
+		assertTrue(str.contains("Olle") || str.contains("OLLE"),
+				"Strängrepresentationen för hunden ('%s') innehåller inte dennes ägare".formatted(str));
+	}
+
+	@Test
+	@Order(180)
+	@DisplayName("Ägda hundar finns med i strängrepresentationen för ägaren")
+	public void dogInStringRepresentation() {
+		var fido = newDog("Fido");
+		var karo = newDog("Karo");
+		var owner = newOwner();
+
+		fido.setOwner(owner);
+		karo.setOwner(owner);
+
+		String str = owner.toString();
+		assertAll("Strängrepresentationen för ägaren ('%s') innehåller inte dennes hundar".formatted(str),
+				() -> assertTrue(str.contains("Fido") || str.contains("FIDO"), "Fido saknas"),
+				() -> assertTrue(str.contains("Karo") || str.contains("KARO"), "Karo saknas"));
 	}
 
 	@Test
@@ -356,7 +379,7 @@ public class HR3_3_ExtraTest {
 		var dog = newDog();
 		var owner = newOwner();
 
-		owner.addDog(dog);
+		dog.setOwner(owner);
 
 		try {
 			owner.getDogs().remove(dog);
@@ -365,6 +388,49 @@ public class HR3_3_ExtraTest {
 		}
 
 		assertDogsOwned(owner, dog);
+	}
+
+	////////////////////////////////////////
+	//
+	// Test för remove-metoderna i samlings-
+	// klasserna
+	//
+	////////////////////////////////////////
+
+	@Test
+	@Order(200)
+	@DisplayName("Det går inte att ta bort en hund med en ägare från samlingsklassen")
+	public void attemptingToRemoveDogWithOwnerFromDogCollection() {
+		var dog = newDog();
+		var owner = newOwner();
+		var collection = new DogCollection();
+
+		dog.setOwner(owner);
+		collection.addDog(dog);
+
+		var rv = collection.removeDog(dog);
+
+		assertAll("Fel resultat vid försök att ta bort en hund med en ägare från samlingen",
+				() -> assertFalse(rv, "Fel returvärde för remove-metoden"),
+				() -> assertTrue(collection.containsDog(dog), "Fel returvärde för contains-metoden"));
+	}
+
+	@Test
+	@Order(210)
+	@DisplayName("Det går inte att ta bort en ägare med hundar från samlingsklassen")
+	public void attemptingToRemoveOwnerWithDogsFromOwnerCollection() {
+		var dog = newDog();
+		var owner = newOwner();
+		var collection = new OwnerCollection();
+
+		dog.setOwner(owner);
+		collection.addOwner(owner);
+
+		var rv = collection.removeOwner(owner);
+
+		assertAll("Fel resultat vid försök att ta bort en hund med en ägare från samlingen",
+				() -> assertFalse(rv, "Fel returvärde för remove-metoden"),
+				() -> assertTrue(collection.containsOwner(owner), "Fel returvärde för contains-metoden"));
 	}
 
 	/**

@@ -1,3 +1,4 @@
+package tests;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.Arrays;
@@ -5,8 +6,11 @@ import java.util.Arrays;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
 
+import Dog;
+import DogTailNameComparator;
+
 /**
- * Testfall för jämförelsefunktionen för namn i uppgift HR2.2.
+ * Testfall för jämförelsefunktionen för svanslängd och namn i uppgift HR2.3.
  * <p>
  * Beskrivningen av testfallens uppgift, styrka och svagheter från
  * <code>{@link HR1_1_OwnerTest}</code> gäller (naturligvis) också för
@@ -18,109 +22,154 @@ import org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
  * @see HR1_1_OwnerTest
  */
 @TestMethodOrder(OrderAnnotation.class)
-@DisplayName("HR2.2: Testfall för jämförelsefunktionen för namn")
-public class HR2_2_DogNameComparatorTest {
+@DisplayName("HR2.3: Testfall för jämförelsefunktionen för svanslängd och namn")
+public class HR2_3_DogTailNameComparatorTest {
 
 	public static final String VERSION = "2023-12-11 14:56";
 
+	private static final String DEFAULT_NAME = "Name";
 	private static final String DEFAULT_BREED = "Breed";
 	private static final int DEFAULT_AGE = 3;
 	private static final int DEFAULT_WEIGHT = 7;
-	private static final Dog FIRST_DOG_IN_ALPHABETIC_ORDER = new Dog("Fido", DEFAULT_BREED, DEFAULT_AGE,
-			DEFAULT_WEIGHT);
-	private static final Dog SECOND_DOG_IN_ALPHABETIC_ORDER = new Dog("Karo", DEFAULT_BREED, DEFAULT_AGE,
-			DEFAULT_WEIGHT);
-	private static final Dog ANY_DOG = FIRST_DOG_IN_ALPHABETIC_ORDER;
 
 	@Test
 	@Order(10)
 	@DisplayName("Implementerad enligt instruktionerna")
 	public void validateImplementation() {
-		new DogNameComparatorImplementationValidator().execute();
+		new DogTailNameComparatorImplementationValidator().execute();
 	}
 
 	@Test
 	@Order(20)
 	@DisplayName("Jämförelse med samma hund ger resultatet 0")
 	public void aDogIsEqualToItSelf() {
-		DogNameComparator sut = new DogNameComparator();
-		assertEquals(0, sut.compare(ANY_DOG, ANY_DOG));
+		DogTailNameComparator sut = new DogTailNameComparator();
+		Dog dog = new Dog(DEFAULT_NAME, DEFAULT_BREED, DEFAULT_AGE, DEFAULT_WEIGHT);
+		assertEquals(0, sut.compare(dog, dog));
 	}
 
 	@Test
 	@Order(30)
-	@DisplayName("Jämförelse med annan hund med samma namn ger resultatet 0")
-	public void aDogIsEqualToAnotherDogWithTheSameName() {
-		DogNameComparator sut = new DogNameComparator();
-		assertEquals(0, sut.compare(ANY_DOG,
-				new Dog(new String(ANY_DOG.getName()), DEFAULT_BREED, DEFAULT_AGE, DEFAULT_WEIGHT)));
+	@DisplayName("Jämförelse med annan hund med samma svanslängd och namn ger resultatet 0")
+	public void aDogIsEqualToAnotherDogWithTheSameTailLengthAndName() {
+		DogTailNameComparator sut = new DogTailNameComparator();
+		Dog firstDog = new Dog(DEFAULT_NAME, DEFAULT_BREED, DEFAULT_AGE, DEFAULT_WEIGHT);
+		Dog secondDog = new Dog(new String(DEFAULT_NAME), DEFAULT_BREED, DEFAULT_AGE, DEFAULT_WEIGHT);
+		assertEquals(0, sut.compare(firstDog, secondDog));
 	}
 
 	@Test
 	@Order(40)
-	@DisplayName("Jämförelse med ett namn tidigare i bokstavsordning och ett efter ger ett resultat under 0")
-	public void theFirstDogComesBeforeTheSecondInAlphabeticOrder() {
-		DogNameComparator sut = new DogNameComparator();
-		assertTrue(sut.compare(FIRST_DOG_IN_ALPHABETIC_ORDER, SECOND_DOG_IN_ALPHABETIC_ORDER) < 0);
+	@DisplayName("Jämförelse med en kort och en lång svans ger ett resultat under 0 om bägge har samma namn")
+	public void theFirstDogHasShorterTailThanTheSecondDogNamesAreTheSame() {
+		DogTailNameComparator sut = new DogTailNameComparator();
+		Dog firstDog = new Dog(DEFAULT_NAME, DEFAULT_BREED, 1, 1);
+		Dog secondDog = new Dog(DEFAULT_NAME, DEFAULT_BREED, 5, 5);
+		assertTrue(sut.compare(firstDog, secondDog) < 0);
 	}
 
 	@Test
 	@Order(50)
-	@DisplayName("Jämförelse med ett namn efter i bokstavsordning och ett tidigare ger ett resultat över 0")
-	public void theFirstDogComesAfterTheSecondInAlphabeticOrder() {
-		DogNameComparator sut = new DogNameComparator();
-		assertTrue(sut.compare(SECOND_DOG_IN_ALPHABETIC_ORDER, FIRST_DOG_IN_ALPHABETIC_ORDER) > 0);
+	@DisplayName("Jämförelse med en kort och en lång svans ger ett resultat under 0 om de har olika namn")
+	public void theFirstDogHasShorterTailThanTheSecondDogNamesAreDifferent() {
+		DogTailNameComparator sut = new DogTailNameComparator();
+		// Ordningen på namnen vald för att ge fel om villkoren utvärderas i fel ordning
+		Dog firstDog = new Dog("Karo", DEFAULT_BREED, 1, 1);
+		Dog secondDog = new Dog("Fido", DEFAULT_BREED, 5, 5);
+		assertTrue(sut.compare(firstDog, secondDog) < 0);
 	}
 
 	@Test
 	@Order(60)
-	@DisplayName("Jämförelse med en kortare och en längre version av samma namn ger ett resultat under 0")
-	public void theFirstDogHasShorterVersionOfTheNameOfTheSecond() {
-		DogNameComparator sut = new DogNameComparator();
+	@DisplayName("Jämförelse med en lång och en kort svans ger ett resultat över 0 om de har samma namn")
+	public void theFirstDogHasLongerTailThanTheSecondDogNamesAreTheSame() {
+		DogTailNameComparator sut = new DogTailNameComparator();
+		Dog firstDog = new Dog(DEFAULT_NAME, DEFAULT_BREED, 5, 5);
+		Dog secondDog = new Dog(DEFAULT_NAME, DEFAULT_BREED, 1, 1);
+		assertTrue(sut.compare(firstDog, secondDog) > 0);
+	}
+
+	@Test
+	@Order(70)
+	@DisplayName("Jämförelse med en lång och en kort svans ger ett resultat över 0 om de har olika namn")
+	public void theFirstDogHasLongerTailThanTheSecondDogNamesAreDifferent() {
+		DogTailNameComparator sut = new DogTailNameComparator();
+		// Ordningen på namnen vald för att ge fel om villkoren utvärderas i fel ordning
+		Dog firstDog = new Dog("Fido", DEFAULT_BREED, 5, 5);
+		Dog secondDog = new Dog("Karo", DEFAULT_BREED, 1, 1);
+		assertTrue(sut.compare(firstDog, secondDog) > 0);
+	}
+
+	@Test
+	@Order(80)
+	@DisplayName("Jämförelse med ett namn tidigare i bokstavsordning och ett efter ger ett resultat under 0 när svanlängden är densamma")
+	public void theFirstDogComesBeforeTheSecondInAlphabeticOrderTailLengthsAreTheSame() {
+		DogTailNameComparator sut = new DogTailNameComparator();
+		Dog firstDog = new Dog("Fido", DEFAULT_BREED, DEFAULT_AGE, DEFAULT_WEIGHT);
+		Dog secondDog = new Dog("Karo", DEFAULT_BREED, DEFAULT_AGE, DEFAULT_WEIGHT);
+		assertTrue(sut.compare(firstDog, secondDog) < 0);
+	}
+
+	@Test
+	@Order(90)
+	@DisplayName("Jämförelse med ett namn efter i bokstavsordning och ett tidigare ger ett resultat över 0 när svanlängden är densamma")
+	public void theFirstDogComesAfterTheSecondInAlphabeticOrderTailLengthsAreTheSame() {
+		DogTailNameComparator sut = new DogTailNameComparator();
+		Dog firstDog = new Dog("Karo", DEFAULT_BREED, DEFAULT_AGE, DEFAULT_WEIGHT);
+		Dog secondDog = new Dog("Fido", DEFAULT_BREED, DEFAULT_AGE, DEFAULT_WEIGHT);
+		assertTrue(sut.compare(firstDog, secondDog) > 0);
+	}
+
+	@Test
+	@Order(100)
+	@DisplayName("Jämförelse med en kortare och en längre version av samma namn ger ett resultat under 0 när svanlängden är densamma")
+	public void theFirstDogHasShorterVersionOfTheNameOfTheSecondTailLengthsAreTheSame() {
+		DogTailNameComparator sut = new DogTailNameComparator();
 		Dog fido = new Dog("Fido", DEFAULT_BREED, DEFAULT_AGE, DEFAULT_WEIGHT);
 		Dog fidolina = new Dog("Fidolina", DEFAULT_BREED, DEFAULT_AGE, DEFAULT_WEIGHT);
 		assertTrue(sut.compare(fido, fidolina) < 0);
 	}
 
 	@Test
-	@Order(70)
-	@DisplayName("Jämförelse med en längre och en kortare version av samma namn ger ett resultat över 0")
-	public void theFirstDogHasLongerVersionOfTheNameOfTheSecond() {
-		DogNameComparator sut = new DogNameComparator();
+	@Order(110)
+	@DisplayName("Jämförelse med en längre och en kortare version av samma namn ger ett resultat över 0 när svanlängden är densamma")
+	public void theFirstDogHasLongerVersionOfTheNameOfTheSecondTailLengthsAreTheSame() {
+		DogTailNameComparator sut = new DogTailNameComparator();
 		Dog fido = new Dog("Fido", DEFAULT_BREED, DEFAULT_AGE, DEFAULT_WEIGHT);
 		Dog fidolina = new Dog("Fidolina", DEFAULT_BREED, DEFAULT_AGE, DEFAULT_WEIGHT);
 		assertTrue(sut.compare(fidolina, fido) > 0);
 	}
 
 	@Test
-	@Order(80)
-	@DisplayName("Normaliserade namn används vid jämförelsen")
-	public void normalizedNamesUsed() {
-		DogNameComparator sut = new DogNameComparator();
-		assertEquals(0, sut.compare(ANY_DOG,
-				new Dog(ANY_DOG.getName().toLowerCase(), DEFAULT_BREED, DEFAULT_AGE, DEFAULT_WEIGHT)));
+	@Order(120)
+	@DisplayName("Normaliserade namn används vid jämförelsen när svanlängden är densamma")
+	public void normalizedNamesUsedTailLengthsAreTheSame() {
+		DogTailNameComparator sut = new DogTailNameComparator();
+		Dog firstDog = new Dog("Fido", DEFAULT_BREED, DEFAULT_AGE, DEFAULT_WEIGHT);
+		Dog secondDog = new Dog("fido", DEFAULT_BREED, DEFAULT_AGE, DEFAULT_WEIGHT);
+		assertEquals(0, sut.compare(firstDog, secondDog));
 	}
 
 	@Test
-	@Order(90)
+	@Order(130)
 	@DisplayName("Sortera hundar med hjälp av comparatorn")
 	public void sortDogsUsingComparator() {
-		var bamse = new Dog("Bamse", "Dachshund", 2, 4); // svans=3,7
-		var doris = new Dog("Doris", "Pudel", 20, 11); // svans=22,0
-		var fido = new Dog("Fido", "Tax", 2, 15); // svans=3,7
-		var karo = new Dog("Karo", "Dachshund", 17, 20); // svans=3,7
-		var lassie = new Dog("Lassie", "Shih tzu", 20, 8); // svans=16,0
-		var milou = new Dog("Milou", "Grand danois", 12, 8); // svans=9,6
-		var ratata = new Dog("Ratata", "Boxer", 5, 15); // svans=7,5
-		var rex = new Dog("Rex", "Boxer", 10, 7); // svans=7,0
-		var snobben = new Dog("Snobben", "Puli", 15, 9); // svans=13,5
-		var wilma = new Dog("Wilma", "Golden retriever", 16, 15); // svans=24,0
+		var molly = new Dog("Molly", "Rottweiler", 7, 5); // svans=3,5
+		var lassie = new Dog("Lassie", "Dachshund", 9, 14); // svans=3,7
+		var ronja = new Dog("Ronja", "Dachshund", 11, 2); // svans=3,7
+		var snobben = new Dog("Snobben", "Dachshund", 13, 7); // svans=3,7
+		var sigge = new Dog("Sigge", "Grand danois", 4, 17); // svans=6,8
+		var karo = new Dog("Karo", "Pudel", 18, 6); // svans=10,8
+		var ludde = new Dog("Ludde", "Boxer", 18, 6); // svans=10,8
+		var ratata = new Dog("Ratata", "Shih tzu", 7, 16); // svans=11,2
+		var charlie = new Dog("Charlie", "Golden retriever", 12, 14); // svans=16,8
+		var wilma = new Dog("Wilma", "Dobermann", 19, 14); // svans=26,6
 
-		Dog[] expected = { bamse, doris, fido, karo, lassie, milou, ratata, rex, snobben, wilma };
+		Dog[] expected = { molly, lassie, ronja, snobben, sigge, karo, ludde, ratata, charlie, wilma };
 
-		Dog[] actual = { doris, snobben, wilma, lassie, milou, bamse, ratata, fido, karo, rex };
+		Dog[] actual = { ludde, sigge, ratata, lassie, karo, snobben, ronja, molly, charlie, wilma };
 
-		var sut = new DogNameComparator();
+		var sut = new DogTailNameComparator();
 		Arrays.sort(actual, sut);
 
 		assertArrayEquals(expected, actual);
@@ -175,9 +224,9 @@ public class HR2_2_DogNameComparatorTest {
 	 * Denna klass är automatiskt genererad. Ändringar i den kommer att skrivas
 	 * över vid nästa uppdatering.
 	 */
-	public class DogNameComparatorImplementationValidator {
+	public class DogTailNameComparatorImplementationValidator {
 	
-		private final Class<?> cut = DogNameComparator.class;
+		private final Class<?> cut = DogTailNameComparator.class;
 		private static final java.util.Collection<MethodHeader> EXPECTED_PUBLIC_METHODS = new java.util.ArrayList<>();
 	
 		/**

@@ -1,6 +1,7 @@
 // Lizardo Klavebäck Martinez likl2578@SU.SE
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 public class OwnerCollection {
     
@@ -89,6 +90,7 @@ public class OwnerCollection {
 
     public ArrayList<Owner> getOwners() {
         ArrayList<Owner> ownerList = new ArrayList<Owner>();
+        Arrays.sort(owners);
         for (int i = 0; i < owners.length; i++) {
             ownerList.add(owners[i]);
         }
@@ -113,5 +115,7 @@ public class OwnerCollection {
             } 
         }
         owners = temp;
+        size--;
     }
+    
 }

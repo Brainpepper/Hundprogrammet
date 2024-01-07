@@ -1,3 +1,4 @@
+package tests;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.lang.reflect.*;
@@ -6,6 +7,9 @@ import java.util.stream.Stream;
 
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
+
+import Owner;
+import OwnerCollection;
 
 /**
  * Testfall för ägarsamlingen i uppgift HR3.2.

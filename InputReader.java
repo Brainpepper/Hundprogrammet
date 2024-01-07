@@ -4,17 +4,17 @@ import java.util.ArrayList;
 import java.util.Scanner;
 import java.io.InputStream;
 
-public class HandleUserInput {
+public class InputReader {
     private static final String END_OF_TEXT = "?> ";
 
     private static ArrayList<InputStream> inputStreamList = new ArrayList<>();
     private Scanner scanner;
 
-    public HandleUserInput() {
+    public InputReader() {
         this(System.in);
     }
 
-    public HandleUserInput(InputStream inputStream) {
+    public InputReader(InputStream inputStream) {
         if (inputStreamList.contains(inputStream))
             throw new IllegalStateException("Error: Stream already in use!");
         inputStreamList.add(inputStream);
@@ -23,7 +23,7 @@ public class HandleUserInput {
 
     public String readText(String userInput) {
         System.out.print(userInput + END_OF_TEXT);
-        String input = formatString(scanner.nextLine().trim());
+        String input = scanner.nextLine().trim();
         return input;
     }
 
@@ -41,7 +41,4 @@ public class HandleUserInput {
         return input;
     }
 
-    private String formatString(String string) {
-        return string.substring(0, 1).toUpperCase() + string.substring(1).toLowerCase();
-    }
 }

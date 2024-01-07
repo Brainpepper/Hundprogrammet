@@ -11,5 +11,5 @@ public class DogTailNameComparator implements java.util.Comparator<Dog> {
             return dogOne.getName().compareTo(dogTwo.getName());
         }
     }
-
+    
 }

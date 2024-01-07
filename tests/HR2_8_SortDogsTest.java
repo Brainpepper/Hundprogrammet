@@ -1,3 +1,4 @@
+package tests;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.*;
@@ -5,6 +6,12 @@ import java.util.*;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
 import org.opentest4j.MultipleFailuresError;
+
+import Dog;
+import DogNameComparator;
+import DogSorter;
+import DogTailComparator;
+import DogTailNameComparator;
 
 /**
  * Testfall för sorteringsmetoden i uppgift HR2.8.

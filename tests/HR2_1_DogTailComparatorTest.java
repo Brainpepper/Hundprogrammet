@@ -1,13 +1,16 @@
+package tests;
 import static org.junit.jupiter.api.Assertions.*;
 
-import java.lang.reflect.*;
-import java.util.*;
+import java.util.Arrays;
 
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
 
+import Dog;
+import DogTailComparator;
+
 /**
- * Testfall för metoden för att byta plats på två hundar i uppgift HR2.6.
+ * Testfall för jämförelsefunktionen för svanslängd i uppgift HR2.1.
  * <p>
  * Beskrivningen av testfallens uppgift, styrka och svagheter från
  * <code>{@link HR1_1_OwnerTest}</code> gäller (naturligvis) också för
@@ -19,96 +22,80 @@ import org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
  * @see HR1_1_OwnerTest
  */
 @TestMethodOrder(OrderAnnotation.class)
-@DisplayName("HR2.6: Testfall för metoden för att byta plats på två hundar")
-public class HR2_6_SwapDogsTest {
+@DisplayName("HR2.1: Testfall för jämförelsefunktionen för svanslängd")
+public class HR2_1_DogTailComparatorTest {
 
 	public static final String VERSION = "2023-12-11 14:56";
 
+	private static final String DEFAULT_NAME = "Name";
 	private static final String DEFAULT_BREED = "Breed";
-	private static final int DEFAULT_AGE = 3;
-	private static final int DEFAULT_WEIGHT = 7;
-
-	private static final Dog FIRST_DOG = new Dog("First", DEFAULT_BREED, DEFAULT_AGE, DEFAULT_WEIGHT);
-	private static final Dog SECOND_DOG = new Dog("Second", DEFAULT_BREED, DEFAULT_AGE, DEFAULT_WEIGHT);
-
-	private ArrayList<Dog> dogs = new ArrayList<>(Arrays.asList(FIRST_DOG, SECOND_DOG));
-
-	private void callSwapMethod(ArrayList<Dog> dogs, int i, int j) {
-		// TODO: acceptera andra typer av listor
-		try {
-			Method swapMethod = DogSorter.class.getDeclaredMethod("swapDogs", ArrayList.class, int.class, int.class);
-			swapMethod.setAccessible(true);
-			swapMethod.invoke(null, dogs, i, j);
-		} catch (NoSuchMethodException | SecurityException | IllegalAccessException | InvocationTargetException e) {
-			fail("Fel vid anrop på swapDogs", e);
-		}
-	}
+	private static final Dog SHORT_TAIL_DOG = new Dog(DEFAULT_NAME, DEFAULT_BREED, 2, 3);
+	private static final Dog LONG_TAIL_DOG = new Dog(DEFAULT_NAME, DEFAULT_BREED, 4, 5);
+	private static final Dog ANY_DOG = SHORT_TAIL_DOG;
 
 	@Test
 	@Order(10)
 	@DisplayName("Implementerad enligt instruktionerna")
 	public void validateImplementation() {
-		new DogSorterImplementationValidator().execute();
+		new DogTailComparatorImplementationValidator().execute();
 	}
 
 	@Test
 	@Order(20)
-	@DisplayName("Byt plats på två element, indexen i \"rätt\" ordning")
-	public void swapFirstAndSecondDog() {
-		callSwapMethod(dogs, 0, 1);
-
-		var expected = new ArrayList<>(Arrays.asList(SECOND_DOG, FIRST_DOG));
-		assertEquals(expected, dogs);
+	@DisplayName("Jämförelse med samma hund ger resultatet 0")
+	public void aDogIsEqualToItSelf() {
+		DogTailComparator sut = new DogTailComparator();
+		assertEquals(0, sut.compare(ANY_DOG, ANY_DOG));
 	}
 
 	@Test
 	@Order(30)
-	@DisplayName("Byt plats på två element, indexen i omvänd ordning")
-	public void swapSecondAndFirstDog() {
-		callSwapMethod(dogs, 1, 0);
-
-		var expected = new ArrayList<>(Arrays.asList(SECOND_DOG, FIRST_DOG));
-		assertEquals(expected, dogs);
+	@DisplayName("Jämförelse med annan hund med samma svanslängd ger resultatet 0")
+	public void aDogIsEqualToAnotherDogWithTheSameTailLength() {
+		DogTailComparator sut = new DogTailComparator();
+		assertEquals(0,
+				sut.compare(ANY_DOG, new Dog("Another Name", DEFAULT_BREED, ANY_DOG.getAge(), ANY_DOG.getWeight())));
 	}
 
 	@Test
 	@Order(40)
-	@DisplayName("Byta plats på ett element med sig själv ")
-	public void swapFirstAndFirstDog() {
-		callSwapMethod(dogs, 0, 0);
-
-		var expected = new ArrayList<>(Arrays.asList(FIRST_DOG, SECOND_DOG));
-		assertEquals(expected, dogs);
+	@DisplayName("Jämförelse med en kort och en lång svans ger ett resultat under 0")
+	public void theFirstDogHasShorterTailThanTheSecondDog() {
+		DogTailComparator sut = new DogTailComparator();
+		assertTrue(sut.compare(SHORT_TAIL_DOG, LONG_TAIL_DOG) < 0);
 	}
 
 	@Test
 	@Order(50)
-	@DisplayName("Serie av slumpmässiga byten")
-	public void multipleSwaps() {
-		var snobben = new Dog("Snobben", "Boxer", 2, 5); // svans=1,0
-		var fido = new Dog("Fido", "Labrador", 7, 3); // svans=2,1
-		var karo = new Dog("Karo", "Dvärgschnauzer, peppar & salt", 2, 16); // svans=3,2
-		var bella = new Dog("Bella", "Dachshund", 17, 9); // svans=3,7
-		var ratata = new Dog("Ratata", "Tax", 11, 2); // svans=3,7
-		var wilma = new Dog("Wilma", "Dachshund", 17, 15); // svans=3,7
-		var ronja = new Dog("Ronja", "Boxer", 2, 20); // svans=4,0
-		var doris = new Dog("Doris", "Pudel", 13, 7); // svans=9,1
-		var rex = new Dog("Rex", "Grand danois", 20, 8); // svans=16,0
-		var lassie = new Dog("Lassie", "Dvärgschnauzer, peppar & salt", 14, 15); // svans=21,0
+	@DisplayName("Jämförelse med en lång och en kort svans ger ett resultat över 0")
+	public void theFirstDogHasLongerTailThanTheSecondDog() {
+		DogTailComparator sut = new DogTailComparator();
+		assertTrue(sut.compare(LONG_TAIL_DOG, SHORT_TAIL_DOG) > 0);
+	}
 
-		var actual = new ArrayList<Dog>(
-				Arrays.asList(snobben, fido, karo, bella, ratata, wilma, ronja, doris, rex, lassie));
-		var expected = new ArrayList<Dog>(actual);
+	@Test
+	@Order(60)
+	@DisplayName("Sortera hundar med hjälp av comparatorn")
+	public void sortDogsUsingComparator() {
+		var fido = new Dog("Fido", "Shih tzu", 3, 2); // svans=0,6
+		var devil = new Dog("Devil", "Dvärgschnauzer, peppar & salt", 2, 11); // svans=2,2
+		var molly = new Dog("Molly", "Dobermann", 11, 3); // svans=3,3
+		var milou = new Dog("Milou", "Vinthund", 3, 13); // svans=3,9
+		var ronja = new Dog("Ronja", "Cocker spaniel", 6, 7); // svans=4,2
+		var lassie = new Dog("Lassie", "Bulldogg", 5, 11); // svans=5,5
+		var ratata = new Dog("Ratata", "Golden retriever", 8, 7); // svans=5,6
+		var charlie = new Dog("Charlie", "Border collie", 5, 18); // svans=9,0
+		var sigge = new Dog("Sigge", "Bulldogg", 6, 20); // svans=12,0
+		var karo = new Dog("Karo", "Yorkshireterrier", 18, 11); // svans=19,8
 
-		var rnd = new Random();
+		Dog[] expected = { fido, devil, molly, milou, ronja, lassie, ratata, charlie, sigge, karo };
 
-		for (int n = 0; n < 25; n++) {
-			int i = rnd.nextInt(actual.size());
-			int j = rnd.nextInt(actual.size());
-			callSwapMethod(actual, i, j);
-			Collections.swap(expected, i, j);
-			assertEquals(expected, actual);
-		}
+		Dog[] actual = { lassie, ratata, fido, devil, ronja, milou, charlie, sigge, molly, karo };
+
+		var sut = new DogTailComparator();
+		Arrays.sort(actual, sut);
+
+		assertArrayEquals(expected, actual);
 	}
 
 	/**
@@ -160,9 +147,9 @@ public class HR2_6_SwapDogsTest {
 	 * Denna klass är automatiskt genererad. Ändringar i den kommer att skrivas
 	 * över vid nästa uppdatering.
 	 */
-	public class DogSorterImplementationValidator {
+	public class DogTailComparatorImplementationValidator {
 	
-		private final Class<?> cut = DogSorter.class;
+		private final Class<?> cut = DogTailComparator.class;
 		private static final java.util.Collection<MethodHeader> EXPECTED_PUBLIC_METHODS = new java.util.ArrayList<>();
 	
 		/**
@@ -171,7 +158,8 @@ public class HR2_6_SwapDogsTest {
 		 * i klassen att göra.
 		 */
 		static {
-			EXPECTED_PUBLIC_METHODS.add(new MethodHeader(true, "int", "sortDogs", "Comparator", "ArrayList"));
+			EXPECTED_PUBLIC_METHODS.add(new MethodHeader(false, "int", "compare", "Dog", "Dog"));
+			EXPECTED_PUBLIC_METHODS.add(new MethodHeader(false, "int", "compare", "Object", "Object"));
 		}
 	
 		public void execute() {

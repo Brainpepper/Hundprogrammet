@@ -1,3 +1,4 @@
+package tests;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.lang.invoke.MethodHandles;
@@ -9,6 +10,8 @@ import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.*;
+
+import Dog;
 
 /**
  * Testfall för hundklassen i uppgift HR1.2. <p> Beskrivningen av testfallens

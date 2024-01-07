@@ -1,12 +1,22 @@
+package tests;
 import static org.junit.jupiter.api.Assertions.*;
 
-import java.util.Arrays;
+import java.lang.reflect.*;
+import java.util.*;
 
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+
+import Dog;
+import DogNameComparator;
+import DogSorter;
+import DogTailComparator;
+import DogTailNameComparator;
 
 /**
- * Testfall för den naturliga sorteringsordningen för ägare i uppgift HR2.4.
+ * Testfall för metoden för att hitta "nästa" hund i uppgift HR2.7.
  * <p>
  * Beskrivningen av testfallens uppgift, styrka och svagheter från
  * <code>{@link HR1_1_OwnerTest}</code> gäller (naturligvis) också för
@@ -14,99 +24,98 @@ import org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
  * uppdateras när som helst, inklusive <em>efter</em> deadline.
  * 
  * @author Henrik Bergström
- * @version 2023-12-11 14:56
+ * @version 2023-12-12 16:43
  * @see HR1_1_OwnerTest
  */
 @TestMethodOrder(OrderAnnotation.class)
-@DisplayName("HR2.4: Testfall för den naturliga sorteringsordningen för ägare")
-public class HR2_4_ComparableOwnerTest {
+@DisplayName("HR2.7: Testfall för metoden för att hitta \"nästa\" hund")
+public class HR2_7_NextDogTest {
 
-	public static final String VERSION = "2023-12-11 14:56";
+	public static final String VERSION = "2023-12-12 16:43";
 
-	private static final Owner FIRST_OWNER_IN_ALPHABETIC_ORDER = new Owner("Henrik");
-	private static final Owner SECOND_OWNER_IN_ALPHABETIC_ORDER = new Owner("Olle");
-	private static final Owner ANY_OWNER = FIRST_OWNER_IN_ALPHABETIC_ORDER;
+	private static final Dog DOG_A_1 = new Dog("A", "Mops", 1, 1);
+	private static final Dog DOG_B_2 = new Dog("B", "Mops", 1, 2);
+	private static final Dog DOG_C_3 = new Dog("C", "Mops", 1, 3);
+	private static final Dog DOG_D_3 = new Dog("D", "Mops", 1, 3);
+	private static final Dog DOG_E_4 = new Dog("E", "Mops", 1, 4);
+	private static final Dog DOG_F_4 = new Dog("F", "Mops", 1, 4);
+
+	private static final Comparator<Dog> TAIL_COMPARATOR = new DogTailComparator();
+	private static final Comparator<Dog> NAME_COMPARATOR = new DogNameComparator();
+	private static final Comparator<Dog> TAIL_NAME_COMPARATOR = new DogTailNameComparator();
+
+	private void test(Comparator<Dog> cmp, int index, int expected, Dog... dogs) {
+		var dogList = new ArrayList<>(Arrays.asList(dogs));
+
+		var actual = callNextDogMethod(cmp, dogList, index);
+		assertEquals(expected, actual, """
+				Fel index returnerades av nextDog-metoden.
+				Comparatortyp: %s
+				Hundlistan: %s
+				Index: %d
+				""".formatted(cmp.getClass().getName(), dogList, index));
+	}
+
+	private int callNextDogMethod(Comparator<Dog> cmp, ArrayList<Dog> dogs, int index) {
+		// TODO: acceptera andra typer av listor
+		try {
+			Method nextDogMethod = DogSorter.class.getDeclaredMethod("nextDog", Comparator.class, ArrayList.class,
+					int.class);
+			nextDogMethod.setAccessible(true);
+			return (int) nextDogMethod.invoke(null, cmp, dogs, index);
+		} catch (NoSuchMethodException | SecurityException | IllegalAccessException | InvocationTargetException e) {
+			fail("Fel vid anrop på nextDog", e);
+			// Detta kan aldrig ske eftersom fail avbryter metoden. Kompilatorn kan dock
+			// inte se detta, så retursatsen är nödvändig.
+			return -1;
+		}
+	}
 
 	@Test
 	@Order(10)
 	@DisplayName("Implementerad enligt instruktionerna")
 	public void validateImplementation() {
-		new OwnerImplementationValidator().execute();
+		new DogSorterImplementationValidator().execute();
 	}
 
-	@Test
+	@ParameterizedTest(name = "{index} hunden på index {1} är den \"minsta\" av hundarna på index {0}-2")
+	@CsvSource({ "0,0", "1,1", "2,2" })
 	@Order(20)
-	@DisplayName("Jämförelse med samma ägare ger resultatet 0")
-	public void aOwnerIsEqualToItSelf() {
-		assertEquals(0, ANY_OWNER.compareTo(ANY_OWNER));
+	@DisplayName("Nästa hund finns på det angivna indexet")
+	public void atGivenIndex(int index, int expected) {
+		test(TAIL_COMPARATOR, index, expected, DOG_A_1, DOG_B_2, DOG_C_3);
 	}
 
-	@Test
+	@ParameterizedTest(name = "{index} hunden på index {1} är den \"minsta\" av hundarna på index {0}-3")
+	@CsvSource({ "0,1", "2,3" })
 	@Order(30)
-	@DisplayName("Jämförelse med annan ägare med samma namn ger resultatet 0")
-	public void aOwnerIsEqualToAnotherOwnerWithTheSameName() {
-		assertEquals(0, ANY_OWNER.compareTo(new Owner(new String(ANY_OWNER.getName()))));
+	@DisplayName("Nästa hund finns på indexet direkt efter")
+	public void atNextIndex(int index, int expected) {
+		test(TAIL_COMPARATOR, index, expected, DOG_E_4, DOG_A_1, DOG_C_3, DOG_B_2);
 	}
 
-	@Test
+	@ParameterizedTest(name = "{index} hunden på index {1} är den \"minsta\" av hundarna på index {0}-5")
+	@CsvSource({ "0,2", "3,5" })
 	@Order(40)
-	@DisplayName("Jämförelse med ett namn tidigare i bokstavsordning och ett efter ger ett resultat under 0")
-	public void theFirstOwnerComesBeforeTheSecondInAlphabeticOrder() {
-		assertTrue(FIRST_OWNER_IN_ALPHABETIC_ORDER.compareTo(SECOND_OWNER_IN_ALPHABETIC_ORDER) < 0);
+	@DisplayName("Nästa hund finns på ett index minst två platser bort ")
+	public void atLaterIndex(int index, int expected) {
+		test(TAIL_COMPARATOR, index, expected, DOG_E_4, DOG_C_3, DOG_A_1, DOG_F_4, DOG_D_3, DOG_B_2);
 	}
 
-	@Test
+	@ParameterizedTest(name = "{index} hunden på index {1} är den \"minsta\" av hundarna på index {0}-5")
+	@CsvSource({ "0,2", "1,2", "2,2", "3,5" })
 	@Order(50)
-	@DisplayName("Jämförelse med ett namn efter i bokstavsordning och ett tidigare ger ett resultat över 0")
-	public void theFirstOwnerComesAfterTheSecondInAlphabeticOrder() {
-		assertTrue(SECOND_OWNER_IN_ALPHABETIC_ORDER.compareTo(FIRST_OWNER_IN_ALPHABETIC_ORDER) > 0);
+	@DisplayName("Jämförelse av namn")
+	public void atGivenIndexByName(int index, int expected) {
+		test(NAME_COMPARATOR, index, expected, DOG_E_4, DOG_C_3, DOG_A_1, DOG_F_4, DOG_D_3, DOG_B_2);
 	}
 
-	@Test
+	@ParameterizedTest(name = "{index} hunden på index {1} är den \"minsta\" av hundarna på index {0}-5")
+	@CsvSource({ "0,1", "1,1", "2,4" })
 	@Order(60)
-	@DisplayName("Jämförelse med en kortare och en längre version av samma namn ger ett resultat under 0")
-	public void theFirstOwnerHasShorterVersionOfTheNameOfTheSecond() {
-		Owner anna = new Owner("Anna");
-		Owner annalena = new Owner("Anna-Lena");
-		assertTrue(anna.compareTo(annalena) < 0);
-	}
-
-	@Test
-	@Order(70)
-	@DisplayName("Jämförelse med en längre och en kortare version av samma namn ger ett resultat över 0")
-	public void theFirstOwnerHasLongerVersionOfTheNameOfTheSecond() {
-		Owner anna = new Owner("Anna");
-		Owner annalena = new Owner("Anna-Lena");
-		assertTrue(annalena.compareTo(anna) > 0);
-	}
-
-	@Test
-	@Order(80)
-	@DisplayName("Normaliserade namn används vid jämförelsen")
-	public void normalizedNamesUsed() {
-		assertEquals(0, ANY_OWNER.compareTo(new Owner(ANY_OWNER.getName().toLowerCase())));
-	}
-
-	@Test
-	@Order(90)
-	@DisplayName("Sortera ägare")
-	public void sortDogsUsingComparator() {
-		var ann = new Owner("Ann");
-		var cecilia = new Owner("Cecilia");
-		var gustav = new Owner("Gustav");
-		var helga = new Owner("Helga");
-		var henrik = new Owner("Henrik");
-		var jenny = new Owner("Jenny");
-		var johanna = new Owner("Johanna");
-		var kalle = new Owner("Kalle");
-		var louise = new Owner("Louise");
-		var ulla = new Owner("Ulla");
-
-		Owner[] expected = { ann, cecilia, gustav, helga, henrik, jenny, johanna, kalle, louise, ulla };
-		Owner[] actual = { johanna, jenny, ulla, ann, louise, henrik, helga, kalle, cecilia, gustav };
-		Arrays.sort(actual);
-
-		assertArrayEquals(expected, actual);
+	@DisplayName("Jämförelse av svans och namn")
+	public void atGivenIndexByTailAndName(int index, int expected) {
+		test(TAIL_NAME_COMPARATOR, index, expected, DOG_B_2, DOG_A_1, DOG_F_4, DOG_D_3, DOG_C_3, DOG_E_4);
 	}
 
 	/**
@@ -158,9 +167,9 @@ public class HR2_4_ComparableOwnerTest {
 	 * Denna klass är automatiskt genererad. Ändringar i den kommer att skrivas
 	 * över vid nästa uppdatering.
 	 */
-	public class OwnerImplementationValidator {
+	public class DogSorterImplementationValidator {
 	
-		private final Class<?> cut = Owner.class;
+		private final Class<?> cut = DogSorter.class;
 		private static final java.util.Collection<MethodHeader> EXPECTED_PUBLIC_METHODS = new java.util.ArrayList<>();
 	
 		/**
@@ -169,13 +178,7 @@ public class HR2_4_ComparableOwnerTest {
 		 * i klassen att göra.
 		 */
 		static {
-			EXPECTED_PUBLIC_METHODS.add(new MethodHeader(false, "ArrayList", "getDogs"));
-			EXPECTED_PUBLIC_METHODS.add(new MethodHeader(false, "String", "getName"));
-			EXPECTED_PUBLIC_METHODS.add(new MethodHeader(false, "String", "toString"));
-			EXPECTED_PUBLIC_METHODS.add(new MethodHeader(false, "boolean", "addDog", "Dog"));
-			EXPECTED_PUBLIC_METHODS.add(new MethodHeader(false, "boolean", "removeDog", "Dog"));
-			EXPECTED_PUBLIC_METHODS.add(new MethodHeader(false, "int", "compareTo", "Object"));
-			EXPECTED_PUBLIC_METHODS.add(new MethodHeader(false, "int", "compareTo", "Owner"));
+			EXPECTED_PUBLIC_METHODS.add(new MethodHeader(true, "int", "sortDogs", "Comparator", "ArrayList"));
 		}
 	
 		public void execute() {

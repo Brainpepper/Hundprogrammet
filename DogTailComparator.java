@@ -11,5 +11,5 @@ public class DogTailComparator implements java.util.Comparator<Dog> {
             return 0;
         }
     }
-
+    
 }

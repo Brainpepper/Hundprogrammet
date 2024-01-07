@@ -1,6 +1,7 @@
 // Lizardo Klavebäck Martinez likl2578@SU.SE
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
 
 public class DogSorter {
     

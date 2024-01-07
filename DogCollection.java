@@ -1,6 +1,8 @@
 // Lizardo Klavebäck Martinez likl2578@SU.SE
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.Iterator;
 
 public class DogCollection {
     
@@ -60,10 +62,10 @@ public class DogCollection {
 
     public Dog getDog(String dogName) {
         for(int i = 0; i < dogs.size(); i++) {
-                if(dogs.get(i).getName().equalsIgnoreCase(dogName)) {
-                    return dogs.get(i);
-                }
+            if(dogs.get(i).getName().equalsIgnoreCase(dogName)) {
+                return dogs.get(i);
             }
+        }
         return null;
     }
 
@@ -92,4 +94,5 @@ public class DogCollection {
 
         return dogListCopy;
     }
+    
 }
