@@ -1,4 +1,4 @@
-package tests;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.lang.reflect.*;
@@ -6,12 +6,11 @@ import java.util.*;
 
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
-
-import Dog;
-import DogSorter;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 /**
- * Testfall för metoden för att byta plats på två hundar i uppgift HR2.6.
+ * Testfall för metoden för att hitta "nästa" hund i uppgift HR2.7.
  * <p>
  * Beskrivningen av testfallens uppgift, styrka och svagheter från
  * <code>{@link HR1_1_OwnerTest}</code> gäller (naturligvis) också för
@@ -19,32 +18,50 @@ import DogSorter;
  * uppdateras när som helst, inklusive <em>efter</em> deadline.
  * 
  * @author Henrik Bergström
- * @version 2023-12-11 14:56
+ * @version 2023-12-12 16:43
  * @see HR1_1_OwnerTest
  */
 @TestMethodOrder(OrderAnnotation.class)
-@DisplayName("HR2.6: Testfall för metoden för att byta plats på två hundar")
-public class HR2_6_SwapDogsTest {
+@DisplayName("HR2.7: Testfall för metoden för att hitta \"nästa\" hund")
+public class HR2_7_NextDogTest {
 
-	public static final String VERSION = "2023-12-11 14:56";
+	public static final String VERSION = "2023-12-12 16:43";
 
-	private static final String DEFAULT_BREED = "Breed";
-	private static final int DEFAULT_AGE = 3;
-	private static final int DEFAULT_WEIGHT = 7;
+	private static final Dog DOG_A_1 = new Dog("A", "Mops", 1, 1);
+	private static final Dog DOG_B_2 = new Dog("B", "Mops", 1, 2);
+	private static final Dog DOG_C_3 = new Dog("C", "Mops", 1, 3);
+	private static final Dog DOG_D_3 = new Dog("D", "Mops", 1, 3);
+	private static final Dog DOG_E_4 = new Dog("E", "Mops", 1, 4);
+	private static final Dog DOG_F_4 = new Dog("F", "Mops", 1, 4);
 
-	private static final Dog FIRST_DOG = new Dog("First", DEFAULT_BREED, DEFAULT_AGE, DEFAULT_WEIGHT);
-	private static final Dog SECOND_DOG = new Dog("Second", DEFAULT_BREED, DEFAULT_AGE, DEFAULT_WEIGHT);
+	private static final Comparator<Dog> TAIL_COMPARATOR = new DogTailComparator();
+	private static final Comparator<Dog> NAME_COMPARATOR = new DogNameComparator();
+	private static final Comparator<Dog> TAIL_NAME_COMPARATOR = new DogTailNameComparator();
 
-	private ArrayList<Dog> dogs = new ArrayList<>(Arrays.asList(FIRST_DOG, SECOND_DOG));
+	private void test(Comparator<Dog> cmp, int index, int expected, Dog... dogs) {
+		var dogList = new ArrayList<>(Arrays.asList(dogs));
 
-	private void callSwapMethod(ArrayList<Dog> dogs, int i, int j) {
+		var actual = callNextDogMethod(cmp, dogList, index);
+		assertEquals(expected, actual, """
+				Fel index returnerades av nextDog-metoden.
+				Comparatortyp: %s
+				Hundlistan: %s
+				Index: %d
+				""".formatted(cmp.getClass().getName(), dogList, index));
+	}
+
+	private int callNextDogMethod(Comparator<Dog> cmp, ArrayList<Dog> dogs, int index) {
 		// TODO: acceptera andra typer av listor
 		try {
-			Method swapMethod = DogSorter.class.getDeclaredMethod("swapDogs", ArrayList.class, int.class, int.class);
-			swapMethod.setAccessible(true);
-			swapMethod.invoke(null, dogs, i, j);
+			Method nextDogMethod = DogSorter.class.getDeclaredMethod("nextDog", Comparator.class, ArrayList.class,
+					int.class);
+			nextDogMethod.setAccessible(true);
+			return (int) nextDogMethod.invoke(null, cmp, dogs, index);
 		} catch (NoSuchMethodException | SecurityException | IllegalAccessException | InvocationTargetException e) {
-			fail("Fel vid anrop på swapDogs", e);
+			fail("Fel vid anrop på nextDog", e);
+			// Detta kan aldrig ske eftersom fail avbryter metoden. Kompilatorn kan dock
+			// inte se detta, så retursatsen är nödvändig.
+			return -1;
 		}
 	}
 
@@ -55,64 +72,44 @@ public class HR2_6_SwapDogsTest {
 		new DogSorterImplementationValidator().execute();
 	}
 
-	@Test
+	@ParameterizedTest(name = "{index} hunden på index {1} är den \"minsta\" av hundarna på index {0}-2")
+	@CsvSource({ "0,0", "1,1", "2,2" })
 	@Order(20)
-	@DisplayName("Byt plats på två element, indexen i \"rätt\" ordning")
-	public void swapFirstAndSecondDog() {
-		callSwapMethod(dogs, 0, 1);
-
-		var expected = new ArrayList<>(Arrays.asList(SECOND_DOG, FIRST_DOG));
-		assertEquals(expected, dogs);
+	@DisplayName("Nästa hund finns på det angivna indexet")
+	public void atGivenIndex(int index, int expected) {
+		test(TAIL_COMPARATOR, index, expected, DOG_A_1, DOG_B_2, DOG_C_3);
 	}
 
-	@Test
+	@ParameterizedTest(name = "{index} hunden på index {1} är den \"minsta\" av hundarna på index {0}-3")
+	@CsvSource({ "0,1", "2,3" })
 	@Order(30)
-	@DisplayName("Byt plats på två element, indexen i omvänd ordning")
-	public void swapSecondAndFirstDog() {
-		callSwapMethod(dogs, 1, 0);
-
-		var expected = new ArrayList<>(Arrays.asList(SECOND_DOG, FIRST_DOG));
-		assertEquals(expected, dogs);
+	@DisplayName("Nästa hund finns på indexet direkt efter")
+	public void atNextIndex(int index, int expected) {
+		test(TAIL_COMPARATOR, index, expected, DOG_E_4, DOG_A_1, DOG_C_3, DOG_B_2);
 	}
 
-	@Test
+	@ParameterizedTest(name = "{index} hunden på index {1} är den \"minsta\" av hundarna på index {0}-5")
+	@CsvSource({ "0,2", "3,5" })
 	@Order(40)
-	@DisplayName("Byta plats på ett element med sig själv ")
-	public void swapFirstAndFirstDog() {
-		callSwapMethod(dogs, 0, 0);
-
-		var expected = new ArrayList<>(Arrays.asList(FIRST_DOG, SECOND_DOG));
-		assertEquals(expected, dogs);
+	@DisplayName("Nästa hund finns på ett index minst två platser bort ")
+	public void atLaterIndex(int index, int expected) {
+		test(TAIL_COMPARATOR, index, expected, DOG_E_4, DOG_C_3, DOG_A_1, DOG_F_4, DOG_D_3, DOG_B_2);
 	}
 
-	@Test
+	@ParameterizedTest(name = "{index} hunden på index {1} är den \"minsta\" av hundarna på index {0}-5")
+	@CsvSource({ "0,2", "1,2", "2,2", "3,5" })
 	@Order(50)
-	@DisplayName("Serie av slumpmässiga byten")
-	public void multipleSwaps() {
-		var snobben = new Dog("Snobben", "Boxer", 2, 5); // svans=1,0
-		var fido = new Dog("Fido", "Labrador", 7, 3); // svans=2,1
-		var karo = new Dog("Karo", "Dvärgschnauzer, peppar & salt", 2, 16); // svans=3,2
-		var bella = new Dog("Bella", "Dachshund", 17, 9); // svans=3,7
-		var ratata = new Dog("Ratata", "Tax", 11, 2); // svans=3,7
-		var wilma = new Dog("Wilma", "Dachshund", 17, 15); // svans=3,7
-		var ronja = new Dog("Ronja", "Boxer", 2, 20); // svans=4,0
-		var doris = new Dog("Doris", "Pudel", 13, 7); // svans=9,1
-		var rex = new Dog("Rex", "Grand danois", 20, 8); // svans=16,0
-		var lassie = new Dog("Lassie", "Dvärgschnauzer, peppar & salt", 14, 15); // svans=21,0
+	@DisplayName("Jämförelse av namn")
+	public void atGivenIndexByName(int index, int expected) {
+		test(NAME_COMPARATOR, index, expected, DOG_E_4, DOG_C_3, DOG_A_1, DOG_F_4, DOG_D_3, DOG_B_2);
+	}
 
-		var actual = new ArrayList<Dog>(
-				Arrays.asList(snobben, fido, karo, bella, ratata, wilma, ronja, doris, rex, lassie));
-		var expected = new ArrayList<Dog>(actual);
-
-		var rnd = new Random();
-
-		for (int n = 0; n < 25; n++) {
-			int i = rnd.nextInt(actual.size());
-			int j = rnd.nextInt(actual.size());
-			callSwapMethod(actual, i, j);
-			Collections.swap(expected, i, j);
-			assertEquals(expected, actual);
-		}
+	@ParameterizedTest(name = "{index} hunden på index {1} är den \"minsta\" av hundarna på index {0}-5")
+	@CsvSource({ "0,1", "1,1", "2,4" })
+	@Order(60)
+	@DisplayName("Jämförelse av svans och namn")
+	public void atGivenIndexByTailAndName(int index, int expected) {
+		test(TAIL_NAME_COMPARATOR, index, expected, DOG_B_2, DOG_A_1, DOG_F_4, DOG_D_3, DOG_C_3, DOG_E_4);
 	}
 
 	/**

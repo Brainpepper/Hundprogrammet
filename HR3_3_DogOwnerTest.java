@@ -1,15 +1,10 @@
-package tests;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.*;
 
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
-
-import Dog;
-import DogCollection;
-import Owner;
-import OwnerCollection;
 
 /**
  * Testfall för att sätta/ta bort ägaren för en hund i uppgift HR3.3. Testfallen

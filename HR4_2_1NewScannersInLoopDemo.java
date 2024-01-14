@@ -1,4 +1,4 @@
-package tests;
+
 import java.util.*;
 
 public class HR4_2_1NewScannersInLoopDemo {

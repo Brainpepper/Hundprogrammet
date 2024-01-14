@@ -49,18 +49,10 @@ public class OwnerCollection {
     }
 
     public boolean removeOwner(Owner owner) {
-        if (owner.getDogs().size() > 0) {
-            return false;
-        }
 
         if (this.containsOwner(owner)) {
-            for (int i = 0; i < owners.length; i++) {
-                if (owners[i].equals(owner)) {
-                    owners[i] = null;
-                    this.shortenArrayByOne();
-                    return true;
-                }
-            }
+            this.removeOwner(owner.getName());
+            return true;
         }
         return false;
     }

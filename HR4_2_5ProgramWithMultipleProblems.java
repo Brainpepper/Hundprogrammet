@@ -1,4 +1,4 @@
-package tests;
+
 import java.util.Scanner;
 
 public class HR4_2_5ProgramWithMultipleProblems {

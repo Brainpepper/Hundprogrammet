@@ -1,15 +1,14 @@
-package tests;
+
 import static org.junit.jupiter.api.Assertions.*;
 
-import java.util.Arrays;
+import java.lang.reflect.*;
+import java.util.*;
 
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
 
-import Owner;
-
 /**
- * Testfall för den naturliga sorteringsordningen för ägare i uppgift HR2.4.
+ * Testfall för metoden för att byta plats på två hundar i uppgift HR2.6.
  * <p>
  * Beskrivningen av testfallens uppgift, styrka och svagheter från
  * <code>{@link HR1_1_OwnerTest}</code> gäller (naturligvis) också för
@@ -21,95 +20,96 @@ import Owner;
  * @see HR1_1_OwnerTest
  */
 @TestMethodOrder(OrderAnnotation.class)
-@DisplayName("HR2.4: Testfall för den naturliga sorteringsordningen för ägare")
-public class HR2_4_ComparableOwnerTest {
+@DisplayName("HR2.6: Testfall för metoden för att byta plats på två hundar")
+public class HR2_6_SwapDogsTest {
 
 	public static final String VERSION = "2023-12-11 14:56";
 
-	private static final Owner FIRST_OWNER_IN_ALPHABETIC_ORDER = new Owner("Henrik");
-	private static final Owner SECOND_OWNER_IN_ALPHABETIC_ORDER = new Owner("Olle");
-	private static final Owner ANY_OWNER = FIRST_OWNER_IN_ALPHABETIC_ORDER;
+	private static final String DEFAULT_BREED = "Breed";
+	private static final int DEFAULT_AGE = 3;
+	private static final int DEFAULT_WEIGHT = 7;
+
+	private static final Dog FIRST_DOG = new Dog("First", DEFAULT_BREED, DEFAULT_AGE, DEFAULT_WEIGHT);
+	private static final Dog SECOND_DOG = new Dog("Second", DEFAULT_BREED, DEFAULT_AGE, DEFAULT_WEIGHT);
+
+	private ArrayList<Dog> dogs = new ArrayList<>(Arrays.asList(FIRST_DOG, SECOND_DOG));
+
+	private void callSwapMethod(ArrayList<Dog> dogs, int i, int j) {
+		// TODO: acceptera andra typer av listor
+		try {
+			Method swapMethod = DogSorter.class.getDeclaredMethod("swapDogs", ArrayList.class, int.class, int.class);
+			swapMethod.setAccessible(true);
+			swapMethod.invoke(null, dogs, i, j);
+		} catch (NoSuchMethodException | SecurityException | IllegalAccessException | InvocationTargetException e) {
+			fail("Fel vid anrop på swapDogs", e);
+		}
+	}
 
 	@Test
 	@Order(10)
 	@DisplayName("Implementerad enligt instruktionerna")
 	public void validateImplementation() {
-		new OwnerImplementationValidator().execute();
+		new DogSorterImplementationValidator().execute();
 	}
 
 	@Test
 	@Order(20)
-	@DisplayName("Jämförelse med samma ägare ger resultatet 0")
-	public void aOwnerIsEqualToItSelf() {
-		assertEquals(0, ANY_OWNER.compareTo(ANY_OWNER));
+	@DisplayName("Byt plats på två element, indexen i \"rätt\" ordning")
+	public void swapFirstAndSecondDog() {
+		callSwapMethod(dogs, 0, 1);
+
+		var expected = new ArrayList<>(Arrays.asList(SECOND_DOG, FIRST_DOG));
+		assertEquals(expected, dogs);
 	}
 
 	@Test
 	@Order(30)
-	@DisplayName("Jämförelse med annan ägare med samma namn ger resultatet 0")
-	public void aOwnerIsEqualToAnotherOwnerWithTheSameName() {
-		assertEquals(0, ANY_OWNER.compareTo(new Owner(new String(ANY_OWNER.getName()))));
+	@DisplayName("Byt plats på två element, indexen i omvänd ordning")
+	public void swapSecondAndFirstDog() {
+		callSwapMethod(dogs, 1, 0);
+
+		var expected = new ArrayList<>(Arrays.asList(SECOND_DOG, FIRST_DOG));
+		assertEquals(expected, dogs);
 	}
 
 	@Test
 	@Order(40)
-	@DisplayName("Jämförelse med ett namn tidigare i bokstavsordning och ett efter ger ett resultat under 0")
-	public void theFirstOwnerComesBeforeTheSecondInAlphabeticOrder() {
-		assertTrue(FIRST_OWNER_IN_ALPHABETIC_ORDER.compareTo(SECOND_OWNER_IN_ALPHABETIC_ORDER) < 0);
+	@DisplayName("Byta plats på ett element med sig själv ")
+	public void swapFirstAndFirstDog() {
+		callSwapMethod(dogs, 0, 0);
+
+		var expected = new ArrayList<>(Arrays.asList(FIRST_DOG, SECOND_DOG));
+		assertEquals(expected, dogs);
 	}
 
 	@Test
 	@Order(50)
-	@DisplayName("Jämförelse med ett namn efter i bokstavsordning och ett tidigare ger ett resultat över 0")
-	public void theFirstOwnerComesAfterTheSecondInAlphabeticOrder() {
-		assertTrue(SECOND_OWNER_IN_ALPHABETIC_ORDER.compareTo(FIRST_OWNER_IN_ALPHABETIC_ORDER) > 0);
-	}
+	@DisplayName("Serie av slumpmässiga byten")
+	public void multipleSwaps() {
+		var snobben = new Dog("Snobben", "Boxer", 2, 5); // svans=1,0
+		var fido = new Dog("Fido", "Labrador", 7, 3); // svans=2,1
+		var karo = new Dog("Karo", "Dvärgschnauzer, peppar & salt", 2, 16); // svans=3,2
+		var bella = new Dog("Bella", "Dachshund", 17, 9); // svans=3,7
+		var ratata = new Dog("Ratata", "Tax", 11, 2); // svans=3,7
+		var wilma = new Dog("Wilma", "Dachshund", 17, 15); // svans=3,7
+		var ronja = new Dog("Ronja", "Boxer", 2, 20); // svans=4,0
+		var doris = new Dog("Doris", "Pudel", 13, 7); // svans=9,1
+		var rex = new Dog("Rex", "Grand danois", 20, 8); // svans=16,0
+		var lassie = new Dog("Lassie", "Dvärgschnauzer, peppar & salt", 14, 15); // svans=21,0
 
-	@Test
-	@Order(60)
-	@DisplayName("Jämförelse med en kortare och en längre version av samma namn ger ett resultat under 0")
-	public void theFirstOwnerHasShorterVersionOfTheNameOfTheSecond() {
-		Owner anna = new Owner("Anna");
-		Owner annalena = new Owner("Anna-Lena");
-		assertTrue(anna.compareTo(annalena) < 0);
-	}
+		var actual = new ArrayList<Dog>(
+				Arrays.asList(snobben, fido, karo, bella, ratata, wilma, ronja, doris, rex, lassie));
+		var expected = new ArrayList<Dog>(actual);
 
-	@Test
-	@Order(70)
-	@DisplayName("Jämförelse med en längre och en kortare version av samma namn ger ett resultat över 0")
-	public void theFirstOwnerHasLongerVersionOfTheNameOfTheSecond() {
-		Owner anna = new Owner("Anna");
-		Owner annalena = new Owner("Anna-Lena");
-		assertTrue(annalena.compareTo(anna) > 0);
-	}
+		var rnd = new Random();
 
-	@Test
-	@Order(80)
-	@DisplayName("Normaliserade namn används vid jämförelsen")
-	public void normalizedNamesUsed() {
-		assertEquals(0, ANY_OWNER.compareTo(new Owner(ANY_OWNER.getName().toLowerCase())));
-	}
-
-	@Test
-	@Order(90)
-	@DisplayName("Sortera ägare")
-	public void sortDogsUsingComparator() {
-		var ann = new Owner("Ann");
-		var cecilia = new Owner("Cecilia");
-		var gustav = new Owner("Gustav");
-		var helga = new Owner("Helga");
-		var henrik = new Owner("Henrik");
-		var jenny = new Owner("Jenny");
-		var johanna = new Owner("Johanna");
-		var kalle = new Owner("Kalle");
-		var louise = new Owner("Louise");
-		var ulla = new Owner("Ulla");
-
-		Owner[] expected = { ann, cecilia, gustav, helga, henrik, jenny, johanna, kalle, louise, ulla };
-		Owner[] actual = { johanna, jenny, ulla, ann, louise, henrik, helga, kalle, cecilia, gustav };
-		Arrays.sort(actual);
-
-		assertArrayEquals(expected, actual);
+		for (int n = 0; n < 25; n++) {
+			int i = rnd.nextInt(actual.size());
+			int j = rnd.nextInt(actual.size());
+			callSwapMethod(actual, i, j);
+			Collections.swap(expected, i, j);
+			assertEquals(expected, actual);
+		}
 	}
 
 	/**
@@ -161,9 +161,9 @@ public class HR2_4_ComparableOwnerTest {
 	 * Denna klass är automatiskt genererad. Ändringar i den kommer att skrivas
 	 * över vid nästa uppdatering.
 	 */
-	public class OwnerImplementationValidator {
+	public class DogSorterImplementationValidator {
 	
-		private final Class<?> cut = Owner.class;
+		private final Class<?> cut = DogSorter.class;
 		private static final java.util.Collection<MethodHeader> EXPECTED_PUBLIC_METHODS = new java.util.ArrayList<>();
 	
 		/**
@@ -172,13 +172,7 @@ public class HR2_4_ComparableOwnerTest {
 		 * i klassen att göra.
 		 */
 		static {
-			EXPECTED_PUBLIC_METHODS.add(new MethodHeader(false, "ArrayList", "getDogs"));
-			EXPECTED_PUBLIC_METHODS.add(new MethodHeader(false, "String", "getName"));
-			EXPECTED_PUBLIC_METHODS.add(new MethodHeader(false, "String", "toString"));
-			EXPECTED_PUBLIC_METHODS.add(new MethodHeader(false, "boolean", "addDog", "Dog"));
-			EXPECTED_PUBLIC_METHODS.add(new MethodHeader(false, "boolean", "removeDog", "Dog"));
-			EXPECTED_PUBLIC_METHODS.add(new MethodHeader(false, "int", "compareTo", "Object"));
-			EXPECTED_PUBLIC_METHODS.add(new MethodHeader(false, "int", "compareTo", "Owner"));
+			EXPECTED_PUBLIC_METHODS.add(new MethodHeader(true, "int", "sortDogs", "Comparator", "ArrayList"));
 		}
 	
 		public void execute() {

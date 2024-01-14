@@ -1,4 +1,4 @@
-package tests;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.lang.reflect.*;
@@ -9,8 +9,6 @@ import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
-
-import DogRegister;
 
 /**
  * Testfall för programskelettet i uppgift HR4.1. JUnit-testfallen i denna fil

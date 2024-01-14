@@ -1,4 +1,4 @@
-package tests;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.lang.reflect.*;
@@ -9,17 +9,6 @@ import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
-
-import Dog;
-import DogCollection;
-import DogNameComparator;
-import DogRegister;
-import DogSorter;
-import DogTailComparator;
-import DogTailNameComparator;
-import InputReader;
-import Owner;
-import OwnerCollection;
 
 /**
  * Testfall för det fullständiga hundregistret i uppgift HR4.4. Dessa testfall

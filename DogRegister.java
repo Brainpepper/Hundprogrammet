@@ -83,10 +83,7 @@ public class DogRegister {
     private void registerOwnerMethod() {
         String name = input.readText("Name");
 
-        while (name.isBlank()) {
-            System.out.println("Error: a blank string is not allowed, try again");
-            name = input.readText("Name");
-        }
+        name = handleBlankString(name, "Name");
 
         if (ownerCollection.containsOwner(name)) {
             System.out.println("Error: The owner " + ownerCollection.getOwner(name).getName() + " already exists");
@@ -106,10 +103,7 @@ public class DogRegister {
         
         String name = input.readText("Name");
         
-        while (name.isBlank()) {
-            System.out.println("Error: a blank string is not allowed, try again");
-            name = input.readText("Name");
-        }
+        name = handleBlankString(name, "Name");
 
         if (!ownerCollection.containsOwner(name)) {
             System.out.println("Error: The owner " + name + " does not exist");
@@ -130,10 +124,7 @@ public class DogRegister {
     private void registerDogMethod() {
         String name = input.readText("Name");
 
-        while (name.isBlank()) {
-            System.out.println("Error: a blank string is not allowed, try again");
-            name = input.readText("Name");
-        }
+        name = handleBlankString(name, "Name");
 
         if (dogCollection.containsDog(name)) {
             System.out.println("Error: The dog " + dogCollection.getDog(name).getName()  + " already exists");
@@ -142,10 +133,7 @@ public class DogRegister {
         
         String breed = input.readText("Breed");
 
-        while (breed.isBlank()) {
-            System.out.println("Error: a blank string is not allowed, try again");
-            breed = input.readText("Breed");
-        }
+        breed = handleBlankString(breed, "Breed");
 
         int age = input.readInteger("Age");
         int weight = input.readInteger("Weight");
@@ -163,10 +151,7 @@ public class DogRegister {
 
         String name = input.readText("Name");
 
-        while (name.isBlank()) {
-            System.out.println("Error: a blank string is not allowed, try again");
-            name = input.readText("Name");
-        }
+        name = handleBlankString(name, "Name");
 
         if (!dogCollection.containsDog(name)) {
             System.out.println("Error: The dog " + name + " does not exist");
@@ -254,10 +239,7 @@ public class DogRegister {
 
         String dogName = input.readText("Name of dog");
 
-        if (dogName.isBlank()) {
-            System.out.println("Error: a blank string is not allowed, try again");
-            dogName = input.readText("Name of dog");
-        }
+        dogName = handleBlankString(dogName, "Name of dog");
 
         if (!dogCollection.containsDog(dogName)) {
             System.out.println("Error: The dog " + dogName + " does not exist");
@@ -276,10 +258,7 @@ public class DogRegister {
             return;
         }
 
-        if (ownerName.isBlank()) {
-            System.out.println("Error: a blank string is not allowed, try again");
-            ownerName = input.readText("Name of owner");
-        }
+        ownerName = handleBlankString(ownerName, "Name of owner");
 
         if (!ownerCollection.containsOwner(ownerName)) {
             System.out.println("Error: The owner " + ownerName + " does not exist");
@@ -308,10 +287,7 @@ public class DogRegister {
 
         String dogName = input.readText("Name of dog");
 
-        while (dogName.isBlank()){
-            System.out.println("Error: a blank string is not allowed, try again");
-            dogName = input.readText("Name of dog");
-        }
+        dogName = handleBlankString(dogName, "Name of dog");
 
         if (!dogCollection.containsDog(dogName)) {
             System.out.println("Error: The dog " + dogName + " does not exist");
@@ -339,10 +315,7 @@ public class DogRegister {
 
         String dogName = input.readText("Name of dog");
 
-        while (dogName.isBlank()){
-            System.out.println("Error: a blank string is not allowed, try again");
-            dogName = input.readText("Name of dog");
-        }
+        dogName = handleBlankString(dogName, "Name of dog");
 
         if (!dogCollection.containsDog(dogName)) {
             System.out.println("Error: The dog " + dogName + " does not exist");
@@ -355,6 +328,14 @@ public class DogRegister {
         System.out.println("The dog " + dog.getName() + " is now one year older");
     }
 
+    private String handleBlankString(String string, String prompt) {
+        while (string.isBlank()) {
+            System.out.println("Error: a blank string is not allowed, try again");
+            string = input.readText(prompt);
+        }
+        return string;
+    }
+    
     private void shutdown() {
         System.out.println("Dog register shut down");
     }

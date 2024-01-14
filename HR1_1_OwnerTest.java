@@ -1,10 +1,8 @@
-package tests;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
-
-import Owner;
 
 /**
  * Testfall för ägarklassen i HR1.1. De funktionella testerna kontrollerar bara

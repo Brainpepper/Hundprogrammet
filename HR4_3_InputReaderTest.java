@@ -1,4 +1,4 @@
-package tests;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.*;
@@ -13,8 +13,6 @@ import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-
-import InputReader;
 
 /**
  * Testfall för inläsningsklassen i uppgift HR4.3.

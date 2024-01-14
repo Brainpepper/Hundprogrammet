@@ -1,13 +1,10 @@
-package tests;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.Arrays;
 
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
-
-import Dog;
-import DogTailNameComparator;
 
 /**
  * Testfall för jämförelsefunktionen för svanslängd och namn i uppgift HR2.3.
